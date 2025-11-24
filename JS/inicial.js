@@ -6,7 +6,7 @@ canvas.height = window.innerHeight;
 
 // Sprite personagem
 const sprite = new Image();
-sprite.src = "/IMG/Spritesheet_alex.png";
+sprite.src = "./IMG/Spritesheet_alex.png";
 
 // Imagem por cima de tudo
 const overlay = new Image();
