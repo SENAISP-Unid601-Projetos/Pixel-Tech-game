@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixel Tech</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="CSS/style2.css" />
+  </head>
+  <body>
+    <div id="game-container">
+
+  
+      
+      <div id="game-world">
+        
+        <div class="matrix-background"></div>
+
+        <!-- Mini Map -->
+        <div id="mini-map" class="mini-map">
+          <div id="mini-player" class="mini-player"></div>
+          <!-- Os ícones das tasks serão criados dinamicamente pelo JavaScript -->
+        </div>
+        
+        <!-- Área Final será criada dinamicamente -->
+
+        <div id="player"></div>
+
+        <!-- Tasks originais -->
+        <div
+          class="interactive-object"
+          data-task="task1"
+          data-x="400"
+          data-y="300"
+        >
+          <div class="icon"><i class="fas fa-desktop"></i></div>
+          <div class="label">Computador não liga</div>
+        </div>
+
+        <div
+          class="interactive-object"
+          data-task="task2"
+          data-x="1500"
+          data-y="800"
+        >
+          <div class="icon"><i class="fas fa-wifi"></i></div>
+          <div class="label">Problema de rede</div>
+        </div>
+
+        <div
+          class="interactive-object"
+          data-task="task3"
+          data-x="800"
+          data-y="1200"
+        >
+          <div class="icon"><i class="fas fa-print"></i></div>
+          <div class="label">Impressora com erro</div>
+        </div>
+
+        <div
+          class="interactive-object"
+          data-task="task4"
+          data-x="2200"
+          data-y="500"
+        >
+          <div class="icon"><i class="fas fa-server"></i></div>
+          <div class="label">Servidor lento</div>
+        </div>
+
+        <!-- Novas tasks -->
+        <div
+          class="interactive-object"
+          data-task="task5"
+          data-x="2800"
+          data-y="1500"
+        >
+          <div class="icon"><i class="fas fa-shield-alt"></i></div>
+          <div class="label">Configurar Firewall</div>
+        </div>
+
+        <div
+          class="interactive-object"
+          data-task="task6"
+          data-x="500"
+          data-y="1700"
+        >
+          <div class="icon"><i class="fas fa-database"></i></div>
+          <div class="label">Otimizar Query SQL</div>
+        </div>
+
+        <div
+          class="interactive-object"
+          data-task="task7"
+          data-x="2500"
+          data-y="1000"
+        >
+          <div class="icon"><i class="fas fa-terminal"></i></div>
+          <div class="label">Diagnóstico via Terminal</div>
+        </div>
+
+        <div
+          class="interactive-object"
+          data-task="task8"
+          data-x="1200"
+          data-y="500"
+        >
+          <div class="icon"><i class="fas fa-chart-line"></i></div>
+          <div class="label">CPU Superaquecida</div>
+        </div>
+
+        <div
+          class="interactive-object"
+          data-task="task9"
+          data-x="1800"
+          data-y="1500"
+        >
+          <div class="icon"><i class="fas fa-lock"></i></div>
+          <div class="label">Criptografia de Dados</div>
+        </div>
+
+        <div
+          class="interactive-object"
+          data-task="task10"
+          data-x="2000"
+          data-y="1800"
+        >
+          <div class="icon"><i class="fas fa-network-wired"></i></div>
+          <div class="label">Troubleshoot de Rede</div>
+        </div>
+
+       
+
+        <div id="task-overlay">
+          <div class="task-content">
+            <h2 id="task-title">Problema: O computador não liga.</h2>
+            <p id="task-description">
+              A fonte de alimentação parece ter problemas. Siga os passos para
+              diagnosticar.
+            </p>
+
+            <div class="task-interaction" id="task-interaction">
+              <!-- Conteúdo das tasks será injetado aqui dinamicamente -->
+            </div>
+
+            <div class="button-container">
+              <button id="check-solution-btn">
+                <i class="fas fa-check"></i> Verificar Solução
+              </button>
+              <button id="close-overlay-btn">
+                <i class="fas fa-times"></i> Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+   <div class="hud">
+    <h3>Desafios de TI</h3>
+
+    <div class="controls-info">
+        <strong>Controles:</strong>
+        <div>🡅🡄🡇🡆 = Mover personagem</div>
+        <div>Z/X = Volume 🔊 (canto inferior direito)</div>
+        <div>M = Alternar Mudo</div>
+
+        <strong>Dica:</strong>
+        <div>Encontre as tasks usando o mini mapa!</div>
+    </div>
+</div>
+
+    <div class="progress-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div class="completed-tasks">
+      <h3>Tarefas Concluídas</h3>
+      <ul id="completed-tasks-list"></ul>
+    </div>
+
+    <div class="notification" id="notification">
+      Tarefa concluída com sucesso!
+    </div>
+
+    <script src="JS/script.js"></script>
+    
+    <audio id="step-sound" preload="auto">
+      <source src="passos1.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="background-music" loop style="display: none;">
+      <source src="game.mp3" type="audio/mpeg">
+    </audio>
+
+  
+<div class="volume-control" id="volume-control">
+    <button id="volume-toggle" class="volume-btn">
+        <i class="fas fa-volume-up"></i>
+    </button>
+    <div class="volume-slider-container">
+        <input type="range" id="volume-slider" min="0" max="100" value="20" class="volume-slider">
+        <div class="volume-tooltip" id="volume-tooltip">20%</div>
+    </div>
+</div>
+
+   <!-- Cena Pós-Créditos Estilo Cinema -->
+<div id="post-credits" class="post-credits">
+    <div class="film-grain"></div>
+    <div class="credits-container">
+        <div class="typing-text" id="typing-text-1"></div>
+        <div class="typing-text" id="typing-text-2" style="display: none;"></div>
+        <div class="typing-text" id="typing-text-3" style="display: none;"></div>
+        <div class="final-message" id="final-message" style="display: none;">
+            <span class="escape-text">ENCONTRE A SAÍDA</span>
+            <span class="labirynth-text">DO LABIRINTO</span>
+        </div>
+        <div class="skip-container">
+            <button id="skip-button" class="skip-btn">▶ Pular cena</button>
+        </div>
+    </div>
+</div>
+  </body>
+</html>

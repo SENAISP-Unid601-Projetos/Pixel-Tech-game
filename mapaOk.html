@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labirinto Final</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .matrix-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .matrix-column {
+            position: absolute;
+            top: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 18px;
+            color: rgba(0, 255, 0, 0.6);
+            white-space: pre;
+            animation: fall linear infinite;
+            text-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+            font-weight: bold;
+        }
+
+        @keyframes fall {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(100vh); }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 25, 35, 0.7);
+            z-index: -1;
+        }
+
+        canvas {
+            border: 3px solid #00ff00;
+            background-color: rgba(0, 0, 0, 0.85);
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.4);
+            z-index: 1;
+        }
+
+        /* === TELA INICIAL === */
+        .start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #000000 0%, #1a1a2e 50%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            text-align: center;
+        }
+
+        .start-content {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid #00ff00;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.5);
+            max-width: 600px;
+        }
+
+        .start-title {
+            font-size: 2.5em;
+            color: #00ff00;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+
+        .start-message {
+            font-size: 1.3em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .start-subtitle {
+            font-size: 1.1em;
+            color: #ff4444;
+            margin-top: 30px;
+            font-style: italic;
+            font-weight: bold;
+        }
+
+        .start-btn {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: 2px solid #00ff00;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .start-btn:hover {
+            background: rgba(0, 255, 0, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        /* === TIMER === */
+        .timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 1.5em;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            display: none;
+        }
+
+        .timer.warning {
+            color: #ffaa00;
+            border-color: #ffaa00;
+            animation: pulse 1s infinite;
+        }
+
+        .timer.danger {
+            color: #ff4444;
+            border-color: #ff4444;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* === CONTROLE DE VOLUME === */
+        .volume-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 15px;
+            border-radius: 25px;
+            border: 2px solid #00ff00;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            width: 45px;
+            overflow: hidden;
+        }
+
+        .volume-control:hover,
+        .volume-control.volume-active {
+            width: 170px;
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .volume-btn {
+            background: none;
+            border: none;
+            color: #00ff00;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .volume-btn:hover {
+            background: rgba(0, 255, 0, 0.2);
+            transform: scale(1.1);
+        }
+
+        .volume-slider-container {
+            position: relative;
+            width: 100px;
+            opacity: 0;
+            transition: opacity 0.3s ease 0.1s;
+        }
+
+        .volume-control:hover .volume-slider-container,
+        .volume-control.volume-active .volume-slider-container {
+            opacity: 1;
+        }
+
+        .volume-slider {
+            width: 100%;
+            height: 5px;
+            background: #333;
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #00ff00;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #fff;
+            transition: all 0.2s ease;
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            background: #00cc00;
+            transform: scale(1.2);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            background: #00ff00;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+
+        .volume-tooltip {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #00ff00;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .volume-slider-container:hover .volume-tooltip {
+            opacity: 1;
+        }
+
+        /* Estados do botão de volume */
+        .volume-btn.muted .fa-volume-up::before {
+            content: "\f026";
+            color: #ff4444;
+        }
+
+        .volume-btn.low .fa-volume-up::before {
+            content: "\f027";
+            color: #ffaa00;
+        }
+
+        .volume-btn.medium .fa-volume-up::before {
+            content: "\f027";
+            color: #00ff00;
+        }
+
+        .volume-btn.high .fa-volume-up::before {
+            content: "\f028";
+            color: #00ff00;
+        }
+
+        .volume-control:hover,
+        .volume-control.volume-active {
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            border-color: #00cc00;
+        }
+
+        /* === TELA FINAL === */
+        .final-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #000000 0%, #1a1a2e 50%, #16213e 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            text-align: center;
+        }
+
+        .final-content {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid #00ff00;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.5);
+            max-width: 600px;
+        }
+
+        .final-title {
+            font-size: 3em;
+            color: #00ff00;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+
+        .final-message {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .final-subtitle {
+            font-size: 1.2em;
+            color: #ccc;
+            margin-top: 30px;
+            font-style: italic;
+        }
+
+        /* === VIDEO CONTAINER YOUTUBE === */
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .youtube-player {
+            width: 80%;
+            height: 80%;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+        }
+
+        .skip-video-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: 2px solid #00ff00;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            z-index: 10001;
+        }
+
+        .skip-video-btn:hover {
+            background: rgba(0, 255, 0, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* === NOTIFICAÇÃO DE VOLUME === */
+        .volume-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #00ff00;
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 2px solid #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 10000;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            text-align: center;
+            min-width: 150px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Loading do YouTube */
+        .youtube-loading {
+            color: white;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        /* === GAME OVER SCREEN === */
+        .game-over-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            text-align: center;
+        }
+
+        .game-over-content {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid #ff4444;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.5);
+            max-width: 600px;
+        }
+
+        .game-over-title {
+            font-size: 3em;
+            color: #ff4444;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #ff0000;
+            font-family: 'Courier New', monospace;
+        }
+
+        .game-over-message {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .restart-btn {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: 2px solid #ff4444;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            background: rgba(255, 0, 0, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="matrix-background" id="matrixBackground"></div>
+    <div class="overlay"></div>
+    
+    <!-- Tela Inicial -->
+    <div class="start-screen" id="start-screen">
+        <div class="start-content">
+            <h1 class="start-title">🚨 ALERTA CRÍTICO! 🚨</h1>
+            <div class="start-message">
+                <p>Você está no <strong>núcleo do computador</strong>!</p>
+                <p>A placa-mãe está superaquecendo e pode explodir a qualquer momento!</p>
+                <p style="color: #ff4444; margin-top: 20px;">Encontre a saída antes que seja tarde demais!</p>
+            </div>
+            <div class="start-subtitle">
+                <p>Tempo restante: <span id="time-display">01:00</span></p>
+                <p>Use as setas do teclado para mover</p>
+            </div>
+            <button class="start-btn" id="start-btn">INICIAR MISSÃO</button>
+        </div>
+    </div>
+    
+    <!-- Timer -->
+    <div class="timer" id="timer">01:30</div>
+    
+    <canvas id="mazeCanvas" width="1200" height="500"></canvas>
+
+    <!-- Controle de Volume -->
+    <div class="volume-control" id="volume-control">
+        <button id="volume-toggle" class="volume-btn">
+            <i class="fas fa-volume-up"></i>
+        </button>
+        <div class="volume-slider-container">
+            <input type="range" id="volume-slider" min="0" max="100" value="20" class="volume-slider">
+            <div class="volume-tooltip" id="volume-tooltip">20%</div>
+        </div>
+    </div>
+
+    <!-- Container do Vídeo YouTube -->
+    <div class="video-container" id="video-container">
+        <div class="youtube-loading" id="youtube-loading">
+            <p>Carregando cena final...</p>
+            <p>🎬 Preparando a conclusão épica!</p>
+        </div>
+        <iframe class="youtube-player" id="youtube-player"
+                src=""
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+        </iframe>
+        <button class="skip-video-btn" id="skip-video-btn">Pular Vídeo ▶</button>
+    </div>
+
+    <!-- Tela Final -->
+    <div class="final-screen" id="final-screen">
+        <div class="final-content">
+            <h1 class="final-title">🎉 MISSÃO CUMPRIDA! 🎉</h1>
+            <div class="final-message">
+                <p>Parabéns, técnico! Você superou todos os desafios e escapou do labirinto digital!</p>
+                <p>Sua jornada através dos problemas de TI chegou ao fim glorioso.</p>
+                <p style="color: #00ff00; margin-top: 20px;">✨ O Herói da Tecnologia ✨</p>
+            </div>
+            <div class="final-subtitle">
+                <p>Obrigado por jogar <strong>Pixel Tech Adventure</strong></p>
+                <p>Desenvolvido com 💚 para amantes de tecnologia</p>
+                <p><h2>Créditos:</h2></p>
+                <p> Programação e lógica do game: feitos por Lucas Canova</p>
+                <p>Sites e Sprites: feitos por Arthur Valladão</p> 
+                <p> Imagens, Vídeos, Apresentação e Documentação: feitos por Guilherme Boccato e Matheus Augusto</p>
+                <p style="margin-top: 15px; font-size: 0.9em; color: #888;">"O verdadeiro hackerman supera todos os desafios"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Game Over -->
+    <div class="game-over-screen" id="game-over-screen">
+        <div class="game-over-content">
+            <h1 class="game-over-title">💥 GAME OVER 💥</h1>
+            <div class="game-over-message">
+                <p>A placa-mãe explodiu!</p>
+                <p>Você não conseguiu escapar a tempo...</p>
+                <p style="color: #ff4444; margin-top: 20px;">Tente novamente e seja mais rápido!</p>
+            </div>
+            <button class="restart-btn" id="restart-btn">REINICIAR JOGO</button>
+        </div>
+    </div>
+
+    <!-- Áudio de Fundo -->
+    <audio id="background-music" loop>
+        <source src="msc2.mp3" type="audio/mpeg">
+        Seu navegador não suporta o elemento de áudio.
+    </audio>
+
+    <script>
+        // === CONFIGURAÇÕES DE ÁUDIO ===
+        let volume = 0.2; // VOLUME INICIAL 20%
+        const backgroundMusic = document.getElementById('background-music');
+        let volumeActiveTimeout;
+
+        // === ELEMENTOS DO DOM ===
+        const startScreen = document.getElementById("start-screen");
+        const startBtn = document.getElementById("start-btn");
+        const timerElement = document.getElementById("timer");
+        const gameOverScreen = document.getElementById("game-over-screen");
+        const restartBtn = document.getElementById("restart-btn");
+        const volumeControl = document.getElementById("volume-control");
+        const volumeSlider = document.getElementById("volume-slider");
+        const volumeToggle = document.getElementById("volume-toggle");
+        const volumeTooltip = document.getElementById("volume-tooltip");
+        const videoContainer = document.getElementById("video-container");
+        const youtubePlayer = document.getElementById("youtube-player");
+        const youtubeLoading = document.getElementById("youtube-loading");
+        const skipVideoBtn = document.getElementById("skip-video-btn");
+        const finalScreen = document.getElementById("final-screen");
+
+        // === CONFIGURAÇÃO DO VÍDEO DO YOUTUBE ===
+        const YOUTUBE_VIDEO_ID = "hkr1P9TqMps"; // APENAS O ID
+        const YOUTUBE_URL = `https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&controls=1&showinfo=0&rel=0&modestbranding=1&enablejsapi=1`;
+
+        // === SPRITE CONFIG ===
+        const spriteSheet = new Image();
+        spriteSheet.src = "./IMG/Spritesheet_alex.png";
+
+        // === SPRITE DO PORTAL ===
+        const portalSprite = new Image();
+        portalSprite.src = "IMG/portal.png";
+        let portalFrame = 0;
+        let portalReady = false;
+        const portalFrameWidth = 171;
+        const portalFrameHeight = 365;
+        const portalTotalFrames = 4;
+        let portalFrameDelay = 0;
+
+        portalSprite.onload = () => { portalReady = true; };
+
+        const spriteWidth = 64;
+        const spriteHeight = 64;
+        let frameX = 0;
+        let frameY = 0;
+        let isMoving = false;
+        let spriteReady = false;
+
+        // === LABIRINTO CONFIG ===
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const maze = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+    [1,0,1,0,1,0,1,1,0,1,0,1,1,0,1,0,1,1,0,1,0,1,1,0,1,0,1,1,0,1,0,1,1,0,1,0,1,1,0,1],
+    [1,0,1,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,1],
+    [1,0,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1],
+    [1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
+    [1,0,1,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
+    [1,0,1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1],
+    [1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,1,0,1],
+    [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,1,0,1,0,1],
+    [1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1],
+    [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,1,0,1,0,1,0,1],
+    [1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1],
+    [1,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+    [1,0,1,0,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
+    [1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+];
+        const rows = maze.length;
+        const cols = maze[0].length;
+        const cellSize = 30;
+        
+        let camera = { x: 0, y: 0, zoom: 5 };
+        let player = { x: 1, y: 1 };
+        let goal = { x: cols - 2, y: rows - 2.5 }; // POSIÇÃO ORIGINAL DO PORTAL
+        let gameWon = false;
+        let gameCompleted = false;
+        let gameStarted = false;
+
+        // === TIMER CONFIG ===
+        let timeLeft = 60; // 1 minuto e 30 segundos
+        let timerInterval = null;
+
+        // === CONTROLE DE VELOCIDADE ===
+        let canMove = true;
+        const moveDelay = 100;
+
+        // === FUNÇÕES DE TIMER ===
+        function startTimer() {
+            timerElement.style.display = 'block';
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    gameOver();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            timerElement.textContent = formattedTime;
+            
+            // Atualiza o timer na tela inicial também
+            document.getElementById('time-display').textContent = formattedTime;
+            
+            // Altera a cor conforme o tempo diminui
+            if (timeLeft <= 30) {
+                timerElement.classList.add('danger');
+                timerElement.classList.remove('warning');
+            } else if (timeLeft <= 60) {
+                timerElement.classList.add('warning');
+                timerElement.classList.remove('danger');
+            } else {
+                timerElement.classList.remove('warning', 'danger');
+            }
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function gameOver() {
+            gameCompleted = true;
+            stopTimer();
+            
+            // Para a música de fundo
+            if (backgroundMusic) {
+                backgroundMusic.pause();
+            }
+            
+            // Mostra a tela de Game Over
+            gameOverScreen.style.display = 'flex';
+        }
+
+        // === FUNÇÕES DE ÁUDIO ===
+        function initializeVolumeControl() {
+            if (!volumeControl) return;
+            
+            // Configura volume inicial em 20%
+            setVolume(0.2);
+            volumeSlider.value = 20;
+            
+            volumeSlider.addEventListener("input", (e) => {
+                const newVolume = parseInt(e.target.value) / 100;
+                setVolume(newVolume);
+                updateVolumeIcon();
+                updateVolumeTooltip();
+                showVolumeBar();
+            });
+            
+            volumeSlider.addEventListener("mousedown", showVolumeBar);
+            volumeSlider.addEventListener("touchstart", showVolumeBar);
+            
+            volumeToggle.addEventListener("click", function(e) {
+                toggleMute();
+                showVolumeBar();
+            });
+            
+            document.addEventListener("keydown", (e) => {
+                const key = e.key.toLowerCase();
+                if (key === 'x' || key === 'z' || key === 'm') {
+                    showVolumeBar();
+                }
+            });
+            
+            volumeControl.addEventListener("mouseleave", () => {
+                setTimeout(hideVolumeBar, 1000);
+            });
+            
+            updateVolumeTooltip();
+            updateVolumeIcon();
+            
+            setTimeout(hideVolumeBar, 2000);
+        }
+
+        function showVolumeBar() {
+            if (volumeControl) {
+                volumeControl.classList.add("volume-active");
+                
+                if (volumeActiveTimeout) {
+                    clearTimeout(volumeActiveTimeout);
+                }
+                
+                volumeActiveTimeout = setTimeout(() => {
+                    volumeControl.classList.remove("volume-active");
+                }, 3000);
+            }
+        }
+
+        function hideVolumeBar() {
+            if (volumeControl && !volumeControl.matches(':hover')) {
+                volumeControl.classList.remove("volume-active");
+            }
+        }
+
+        function setVolume(newVolume) {
+            volume = Math.max(0, Math.min(1, newVolume));
+            
+            if (backgroundMusic) {
+                backgroundMusic.volume = volume;
+            }
+            
+            updateVolumeIcon();
+            updateVolumeTooltip();
+            
+            localStorage.setItem('gameVolume', volume);
+        }
+
+        function updateVolumeTooltip() {
+            if (volumeTooltip) {
+                volumeTooltip.textContent = `${Math.round(volume * 100)}%`;
+            }
+        }
+
+        function updateVolumeIcon() {
+            if (!volumeToggle) return;
+            
+            volumeToggle.classList.remove("muted", "low", "medium", "high");
+            
+            if (volume === 0) {
+                volumeToggle.classList.add("muted");
+            } else if (volume <= 0.3) {
+                volumeToggle.classList.add("low");
+            } else if (volume <= 0.7) {
+                volumeToggle.classList.add("medium");
+            } else {
+                volumeToggle.classList.add("high");
+            }
+        }
+
+        function toggleMute() {
+            if (volume === 0) {
+                const lastVolume = volumeSlider.value / 100 || 0.2;
+                setVolume(lastVolume);
+                volumeSlider.value = lastVolume * 100;
+            } else {
+                volumeSlider.setAttribute("data-last-volume", volumeSlider.value);
+                setVolume(0);
+                volumeSlider.value = 0;
+            }
+            
+            updateVolumeIcon();
+            updateVolumeTooltip();
+        }
+
+        function showVolumeNotification(message) {
+            const volumeNotification = document.createElement("div");
+            volumeNotification.className = "volume-notification";
+            volumeNotification.textContent = message;
+            
+            document.body.appendChild(volumeNotification);
+            
+            setTimeout(() => {
+                volumeNotification.style.opacity = "1";
+            }, 10);
+            
+            setTimeout(() => {
+                volumeNotification.style.opacity = "0";
+                setTimeout(() => {
+                    if (volumeNotification.parentNode) {
+                        volumeNotification.parentNode.removeChild(volumeNotification);
+                    }
+                }, 300);
+            }, 1000);
+        }
+
+        function loadSavedVolume() {
+            const savedVolume = localStorage.getItem('gameVolume');
+            if (savedVolume !== null) {
+                const volumeValue = parseFloat(savedVolume);
+                setVolume(volumeValue);
+                volumeSlider.value = volumeValue * 100;
+            }
+        }
+
+        function initializeBackgroundMusic() {
+            if (backgroundMusic) {
+                backgroundMusic.volume = volume;
+                
+                const playMusic = () => {
+                    backgroundMusic.play().catch(e => {
+                        console.log("Reprodução automática bloqueada:", e);
+                    });
+                };
+                
+                document.addEventListener('click', playMusic, { once: true });
+                document.addEventListener('keydown', playMusic, { once: true });
+                
+                setTimeout(playMusic, 1000);
+            }
+        }
+
+        // === CONTROLES DE TECLADO PARA VOLUME ===
+        document.addEventListener("keydown", (e) => {
+            if (gameCompleted || !gameStarted) return;
+            
+            const key = e.key.toLowerCase();
+            
+            if (key === 'x') {
+                e.preventDefault();
+                const currentVolume = volume;
+                const newVolume = Math.min(1, currentVolume + 0.1);
+                setVolume(newVolume);
+                volumeSlider.value = newVolume * 100;
+                showVolumeNotification(`Volume: ${Math.round(newVolume * 100)}%`);
+                showVolumeBar();
+            } else if (key === 'z') {
+                e.preventDefault();
+                const currentVolume = volume;
+                const newVolume = Math.max(0, currentVolume - 0.1);
+                setVolume(newVolume);
+                volumeSlider.value = newVolume * 100;
+                showVolumeNotification(`Volume: ${Math.round(newVolume * 100)}%`);
+                showVolumeBar();
+            } else if (key === 'm') {
+                e.preventDefault();
+                toggleMute();
+                showVolumeNotification(volume === 0 ? "🔇 Mudo" : `🔊 Volume: ${Math.round(volume * 100)}%`);
+                showVolumeBar();
+            }
+        });
+
+        // === FUNÇÕES DO JOGO ===
+        function updateCamera() {
+            camera.x = player.x * cellSize - canvas.width / (2 * camera.zoom);
+            camera.y = player.y * cellSize - canvas.height / (2 * camera.zoom);
+            
+            const maxX = cols * cellSize - canvas.width / camera.zoom;
+            const maxY = rows * cellSize - canvas.height / camera.zoom;
+            
+            camera.x = Math.max(0, Math.min(camera.x, maxX));
+            camera.y = Math.max(0, Math.min(camera.y, maxY));
+        }
+
+        function drawPlayer() {
+            const playerX = player.x * cellSize;
+            const playerY = player.y * cellSize;
+
+            if (spriteReady) {
+                try {
+                    ctx.drawImage(
+                        spriteSheet,
+                        frameX * spriteWidth,
+                        frameY * spriteHeight,
+                        spriteWidth,
+                        spriteHeight,
+                        playerX - cellSize/4,
+                        playerY - cellSize/4,
+                        cellSize,
+                        cellSize
+                    );
+                } catch (e) {
+                    drawFallbackPlayer(playerX, playerY);
+                }
+            } else {
+                drawFallbackPlayer(playerX, playerY);
+            }
+        }
+
+        function drawFallbackPlayer(x, y) {
+            ctx.fillStyle = '#00ff00';
+            ctx.beginPath();
+            ctx.arc(x, y, cellSize/2.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#000000';
+            if (frameY === 0) ctx.fillRect(x - 3, y + 5, 6, 3);
+            if (frameY === 1) ctx.fillRect(x - 8, y - 3, 3, 6);
+            if (frameY === 2) ctx.fillRect(x + 5, y - 3, 3, 6);
+            if (frameY === 3) ctx.fillRect(x - 3, y - 8, 6, 3);
+        }
+
+        function drawMaze() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            updateCamera();
+            
+            ctx.save();
+            ctx.scale(camera.zoom, camera.zoom);
+            ctx.translate(-camera.x, -camera.y);
+            
+            // Labirinto
+            ctx.fillStyle = '#0a0f0d';
+            ctx.fillRect(0, 0, cols * cellSize, rows * cellSize);
+            
+            // Grade
+            ctx.strokeStyle = 'rgba(0, 255, 0, 0.1)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x <= cols; x++) {
+                ctx.beginPath();
+                ctx.moveTo(x * cellSize, 0);
+                ctx.lineTo(x * cellSize, rows * cellSize);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= rows; y++) {
+                ctx.beginPath();
+                ctx.moveTo(0, y * cellSize);
+                ctx.lineTo(cols * cellSize, y * cellSize);
+                ctx.stroke();
+            }
+            
+            // Paredes e caminhos
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const cellX = x * cellSize;
+                    const cellY = y * cellSize;
+                    
+                    if (maze[y][x] === 1) {
+                        ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
+                        ctx.fillRect(cellX, cellY, cellSize, cellSize);
+                    } else {
+                        ctx.fillStyle = 'black';
+                        ctx.fillRect(cellX, cellY, cellSize, cellSize);
+                    }
+                }
+            }
+            
+            // Portal de Saída
+            if (portalReady) {
+                const frameX = (portalFrame % portalTotalFrames) * portalFrameWidth;
+                ctx.drawImage(
+                    portalSprite,
+                    frameX, 0, portalFrameWidth, portalFrameHeight,
+                    goal.x * cellSize, goal.y * cellSize,
+                    cellSize, cellSize * 1.5
+                );
+
+                portalFrameDelay++;
+                if (portalFrameDelay > 10) {
+                    portalFrame = (portalFrame + 1) % portalTotalFrames;
+                    portalFrameDelay = 0;
+                }
+            } else {
+                ctx.fillStyle = '#4CAF50';
+                ctx.fillRect(goal.x * cellSize, goal.y * cellSize, cellSize, cellSize);
+            }
+            
+            // Jogador
+            drawPlayer();
+            
+            ctx.restore();
+        }
+
+        function movePlayer(dx, dy) {
+            if (gameWon || !canMove || gameCompleted || !gameStarted) return;
+            
+            const newX = player.x + dx;
+            const newY = player.y + dy;
+            
+            if (newX >= 0 && newX < cols && newY >= 0 && newY < rows && maze[newY][newX] === 0) {
+                player.x = newX;
+                player.y = newY;
+                
+                if (dx === -1) frameY = 1;
+                if (dx === 1) frameY = 2;
+                if (dy === -1) frameY = 3;
+                if (dy === 1) frameY = 0;
+                
+                frameX = (frameX + 1) % 4;
+                
+                // VERIFICAÇÃO DE COLISÃO CORRIGIDA
+                checkPortalCollision();
+                
+                drawMaze();
+                
+                canMove = false;
+                setTimeout(() => {
+                    canMove = true;
+                }, moveDelay);
+            }
+        }
+
+        // FUNÇÃO: Verificação de colisão com o portal
+        function checkPortalCollision() {
+            const portalRange = 1; // Alcance de 1 célula em todas as direções
+            
+            // Verifica se o jogador está na mesma célula ou adjacente ao portal
+            const distanceX = Math.abs(player.x - goal.x);
+            const distanceY = Math.abs(player.y - goal.y);
+            
+            if (distanceX <= portalRange && distanceY <= portalRange) {
+                console.log("🎉 COLISÃO COM PORTAL DETECTADA!");
+                console.log(`Jogador: (${player.x}, ${player.y}) | Portal: (${goal.x}, ${goal.y})`);
+                gameWon = true;
+                completeGame();
+            }
+        }
+
+        function completeGame() {
+            gameCompleted = true;
+            stopTimer();
+            
+            // Para a música de fundo
+            if (backgroundMusic) {
+                backgroundMusic.pause();
+            }
+            
+            // Mostra o vídeo final do YouTube
+            showFinalVideo();
+        }
+
+        function showFinalVideo() {
+            videoContainer.style.display = 'flex';
+            youtubeLoading.style.display = 'block';
+            youtubePlayer.style.display = 'none';
+            
+            // Configura o player do YouTube
+            youtubePlayer.src = YOUTUBE_URL;
+            
+            // Quando o iframe carregar, esconde o loading
+            youtubePlayer.onload = () => {
+                youtubeLoading.style.display = 'none';
+                youtubePlayer.style.display = 'block';
+            };
+            
+            // Botão para pular o vídeo
+            skipVideoBtn.onclick = showFinalScreen;
+            
+            // Timeout de segurança - se não carregar em 10 segundos, vai para o final
+            setTimeout(() => {
+                if (youtubeLoading.style.display !== 'none') {
+                    showFinalScreen();
+                }
+            }, 10000);
+        }
+
+        function showFinalScreen() {
+            videoContainer.style.display = 'none';
+            finalScreen.style.display = 'flex';
+        }
+
+        // === EVENTOS ===
+        document.addEventListener('keydown', (e) => {
+            if (gameCompleted || !gameStarted) return;
+            
+            switch(e.key) {
+                case 'ArrowUp': movePlayer(0, -1); break;
+                case 'ArrowDown': movePlayer(0, 1); break;
+                case 'ArrowLeft': movePlayer(-1, 0); break;
+                case 'ArrowRight': movePlayer(1, 0); break;
+                case 'p': // Tecla P para debug - teleportar para perto do portal
+                    if (!gameWon) {
+                        player.x = goal.x - 1;
+                        player.y = goal.y;
+                        console.log("🚀 Teleportado para perto do portal!");
+                        drawMaze();
+                    }
+                    break;
+            }
+        });
+
+        // === INICIALIZAÇÃO ===
+        function createMatrixBackground() {
+            const matrix = document.getElementById('matrixBackground');
+            const charWidth = 20;
+            const cols = Math.floor(window.innerWidth / charWidth);
+            
+            for (let c = 0; c < cols; c++) {
+                const column = document.createElement("div");
+                column.className = "matrix-column";
+                column.style.left = `${c * charWidth}px`;
+                column.style.animationDuration = `${20 + Math.random() * 25}s`;
+                column.style.animationDelay = `${Math.random() * 30}s`;
+                
+                let text = "";
+                for (let r = 0; r < 50; r++) {
+                    text += Math.random() > 0.3 ? "1\n" : "0\n";
+                }
+                column.textContent = text;
+                matrix.appendChild(column);
+            }
+        }
+
+        // Configura sprites
+        spriteSheet.onload = function() {
+            spriteReady = true;
+            drawMaze();
+        };
+
+        spriteSheet.onerror = function() {
+            drawMaze();
+        };
+
+        // Inicialização
+        createMatrixBackground();
+        initializeVolumeControl();
+        loadSavedVolume();
+        initializeBackgroundMusic();
+
+        // Loop de animação
+        function gameLoop() {
+            drawMaze();
+            requestAnimationFrame(gameLoop);
+        }
+
+        requestAnimationFrame(gameLoop);
+        window.addEventListener('resize', createMatrixBackground);
+
+        // === INICIAR JOGO ===
+        startBtn.addEventListener('click', function() {
+            startScreen.style.display = 'none';
+            gameStarted = true;
+            startTimer();
+            drawMaze();
+        });
+
+        // === REINICIAR JOGO ===
+        restartBtn.addEventListener('click', function() {
+            // Reinicia variáveis do jogo
+            player = { x: 1, y: 1 };
+            gameWon = false;
+            gameCompleted = false;
+            gameStarted = true;
+            timeLeft = 90;
+            
+            // Esconde telas
+            gameOverScreen.style.display = 'none';
+            finalScreen.style.display = 'none';
+            
+            // Reinicia timer
+            startTimer();
+            
+            // Reinicia música
+            if (backgroundMusic) {
+                backgroundMusic.currentTime = 0;
+                backgroundMusic.play().catch(e => {
+                    console.log("Reprodução automática bloqueada:", e);
+                });
+            }
+            
+            // Redesenha o labirinto
+            drawMaze();
+        });
+    </script>
+</body>
+</html>

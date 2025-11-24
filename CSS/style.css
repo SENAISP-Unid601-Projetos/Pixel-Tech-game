@@ -1,0 +1,23 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+#gameCanvas {
+  background: url("../IMG/tlini.png") no-repeat center center;
+  background-size: cover;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+
